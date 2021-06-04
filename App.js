@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    View,
-} from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import TopTap from '@routes/index';
 import { NavigationContainer } from '@react-navigation/native';

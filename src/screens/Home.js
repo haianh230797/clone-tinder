@@ -1,31 +1,77 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import {
-    SafeAreaView,
-    ScrollView,
-    Animated,
     StyleSheet,
     Text,
     View,
-    PanResponder,
     TouchableOpacity,
-    Dimensions,
     Image,
     FlatList,
+    ToastAndroid,
 } from 'react-native';
-import Carousel from 'react-native-snap-carousel';
 import CardStack, { Card } from 'react-native-card-stack-swiper';
-import normalize from 'react-native-normalize';
-import Colors from '@components/Colors';
 import { Icon } from 'native-base';
+import moment from 'moment';
+
+import Colors from '@components/Colors';
+import { homeStyles } from '@components/homeStyles';
+import { insertNewPFavoriteList } from '@storage/Method';
 
 const BASE_LINK = 'https://randomuser.me/api/0.4/?randomapi';
 
 export default function Home() {
     const [dataUser, setDataUser] = useState([]);
+    const [ageUser, setAgeUser] = useState();
 
+    const [focusType, setFocusType] = useState({
+        name: 'user-circle',
+        type: 'FontAwesome',
+        active: true,
+        content: 'name',
+    });
+    const [dataListFeature, setDataListFeature] = useState([
+        {
+            name: 'user-circle',
+            type: 'FontAwesome',
+            active: true,
+            content: 'name',
+        },
+        {
+            name: 'calendar',
+            type: 'Entypo',
+            active: false,
+            content: 'age',
+        },
+        {
+            name: 'location-outline',
+            type: 'Ionicons',
+            active: false,
+            content: 'address',
+        },
+        {
+            name: 'call-outline',
+            type: 'Ionicons',
+            active: false,
+            content: 'phone',
+        },
+        {
+            name: 'unlocked',
+            type: 'Fontisto',
+            active: false,
+            content: 'unknown',
+        },
+    ]);
     useEffect(() => {
         getData();
-    }, [getData]);
+        setDataListFeature(dataListFeature);
+    }, [dataListFeature, getData]);
+
+    useEffect(() => {
+        if (dataUser.length !== 0) {
+            let date = new Date(1000 * dataUser[dataUser.length - 1].dob);
+            let newDate = moment(date.toString()).fromNow().slice(0, 2);
+            setAgeUser(newDate);
+        }
+    }, [dataUser]);
 
     const getData = useCallback(() => {
         fetch(BASE_LINK)
@@ -38,72 +84,113 @@ export default function Home() {
             .catch((err) => console.log('err when get data: ', err));
     }, [dataUser]);
 
+    const _onPressFeature = (index) => {
+        let arr = [...dataListFeature];
+        arr.forEach((itemArr) => (itemArr.active = false));
+        arr[index].active = true;
+        setFocusType(arr[index]);
+        setDataListFeature(arr);
+    };
+
+    const insertFav = (data) => {
+        const newFavitem = {
+            id: Math.floor(Math.random() * 100000),
+            firstName: data.name.first,
+            lastName: data.name.first,
+            location: data.location.street,
+            dob: ageUser,
+            phone: data.phone,
+            picture: data.picture,
+        };
+        insertNewPFavoriteList(newFavitem)
+            .then(() => {
+                console.log('insertNewPFavoriteList success ');
+            })
+            .catch((err) => {
+                console.log('err insertNewPFavoriteList: ', err);
+            });
+    };
+
+    const _renderItemListFeature = ({ index, item }) => {
+        return (
+            <TouchableOpacity
+                style={styles.listFeatureItem}
+                onPress={() => _onPressFeature(index)}>
+                <Icon
+                    name={item.name}
+                    type={item.type}
+                    style={{
+                        ...styles.listFeatureIcon,
+                        color:
+                            item.active === true ? Colors.JADE : Colors.SILVER,
+                    }}
+                />
+            </TouchableOpacity>
+        );
+    };
+
     return (
         <View style={{ flex: 1 }}>
             <View style={styles.headerBox} />
-            <CardStack
-                style={styles.content}
-                renderNoMoreCards={() => (
-                    <Text
-                        style={{
-                            fontWeight: '700',
-                            fontSize: 18,
-                            color: 'gray',
-                        }}>
-                        No more cards :(
-                    </Text>
-                )}
-                onSwiped={() => getData()}>
-                {dataUser.map((item) => (
+            <CardStack style={styles.content} onSwiped={() => getData()}>
+                {dataUser.map((itemUser) => (
                     <Card
+                        key={itemUser.email}
                         style={styles.card}
                         onSwipedLeft={() => {}}
                         onSwipedRight={() => {
-                            console.log(item);
+                            console.log('itemUser: ', itemUser);
+                            insertFav(itemUser);
+                            ToastAndroid.show(
+                                `Added ${itemUser.name.first} ${itemUser.name.last} to favorite`,
+                                3000,
+                            );
                         }}>
                         <View>
                             <View style={styles.topBox} />
                             <View style={styles.bottomBox}>
                                 <View style={styles.addressBox}>
                                     <Text style={styles.addressTitle}>
-                                        My address is{' '}
+                                        My {focusType.content} is
                                     </Text>
-                                    <Text style={styles.addressContent}>
-                                        {item.location.street}
-                                    </Text>
+                                    {focusType.name === 'user-circle' ? (
+                                        <Text style={styles.addressContent}>
+                                            {itemUser.name.first}{' '}
+                                            {itemUser.name.last}
+                                        </Text>
+                                    ) : focusType.name === 'calendar' ? (
+                                        <Text style={styles.addressContent}>
+                                            {ageUser}
+                                        </Text>
+                                    ) : focusType.name ===
+                                      'location-outline' ? (
+                                        <Text style={styles.addressContent}>
+                                            {itemUser.location.street}
+                                        </Text>
+                                    ) : focusType.name === 'call-outline' ? (
+                                        <Text style={styles.addressContent}>
+                                            {itemUser.phone}
+                                        </Text>
+                                    ) : (
+                                        <Text style={styles.addressContent}>
+                                            {''}
+                                        </Text>
+                                    )}
                                 </View>
                                 <View style={styles.listFeature}>
-                                    <TouchableOpacity>
-                                        <Icon
-                                            name="user-circle"
-                                            type="FontAwesome"
-                                        />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Icon name="calendar" type="Entypo" />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Icon
-                                            name="location-outline"
-                                            type="Ionicons"
-                                        />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Icon
-                                            name="call-outline"
-                                            type="Ionicons"
-                                        />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Icon name="unlocked" type="Fontisto" />
-                                    </TouchableOpacity>
+                                    <FlatList
+                                        horizontal={true}
+                                        data={dataListFeature}
+                                        renderItem={_renderItemListFeature}
+                                        keyExtractor={(item) => item.name}
+                                    />
                                 </View>
                             </View>
                             <View style={styles.stretchBox}>
                                 <Image
                                     style={styles.stretch}
                                     source={{
-                                        uri: item.picture,
+                                        uri: itemUser.picture,
                                     }}
                                 />
                             </View>
@@ -116,77 +203,5 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        flexDirection: 'column',
-    },
-
-    content: {
-        flex: 5,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: Colors.ATHENS_GRAY,
-    },
-    headerBox: {
-        height: 120,
-        backgroundColor: Colors.OXFORD_BLUE,
-    },
-    card: {
-        width: normalize(360, 'width'),
-        borderRadius: 10,
-        shadowColor: 'rgba(0,0,0,0.5)',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.5,
-        bottom: normalize(50, 'height'),
-    },
-    stretchBox: {
-        height: normalize(170, 'height'),
-        width: normalize(200, 'width'),
-        position: 'absolute',
-        top: normalize(40),
-        alignSelf: 'center',
-        borderRadius: 300,
-        borderWidth: 0.5,
-        borderColor: Colors.DUSTY_GRAY,
-        justifyContent: 'center',
-        backgroundColor: Colors.CONCRETE,
-    },
-    stretch: {
-        height: '95%',
-        width: '95%',
-        borderRadius: 300,
-        alignSelf: 'center',
-    },
-    topBox: {
-        height: normalize(120, 'height'),
-        borderBottomWidth: 2,
-        borderColor: Colors.SILVER,
-        backgroundColor: Colors.ATHENS_GRAY,
-        borderTopLeftRadius: 5,
-        borderTopRightRadius: 5,
-    },
-    bottomBox: {
-        height: normalize(450, 'height'),
-        backgroundColor: Colors.CONCRETE,
-    },
-    addressBox: {
-        top: normalize(120),
-        alignSelf: 'center',
-    },
-    addressTitle: {
-        fontSize: 25,
-        color: Colors.SILVER,
-        alignSelf: 'center',
-    },
-    addressContent: {
-        fontSize: 35,
-        color: Colors.OXFORD_BLUE,
-        alignSelf: 'center',
-    },
-    listFeature: {
-        flexDirection: 'row',
-    },
+    ...homeStyles,
 });

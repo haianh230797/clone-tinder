@@ -1,12 +1,4 @@
 import React from 'react';
-import {
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    View,
-} from 'react-native';
 
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Home from '@screens/Home';
@@ -22,7 +14,7 @@ export default function TopTap() {
             }}
             swipeEnabled={false}
             tabBarLabel={false}
-            indicatorStyle={{ backgroundColor: 'red' }}>
+            indicatorStyle={{ display: 'none ' }}>
             <Tab.Screen name="Home" component={Home} />
             <Tab.Screen name="Favorite" component={Favorite} />
         </Tab.Navigator>
