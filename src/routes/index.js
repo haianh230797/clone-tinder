@@ -24,7 +24,7 @@ export default function TopTap() {
             tabBarLabel={false}
             indicatorStyle={{ backgroundColor: 'red' }}>
             <Tab.Screen name="Home" component={Home} />
-            <Tab.Screen name="Settings" component={Favorite} />
+            <Tab.Screen name="Favorite" component={Favorite} />
         </Tab.Navigator>
     );
 }
