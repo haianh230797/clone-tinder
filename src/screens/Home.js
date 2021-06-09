@@ -151,7 +151,7 @@ export default function Home() {
                             <View style={styles.bottomBox}>
                                 <View style={styles.addressBox}>
                                     <Text style={styles.addressTitle}>
-                                        My {focusType.content} is
+                                        My {focusType.content}  is
                                     </Text>
                                     {focusType.name === 'user-circle' ? (
                                         <Text style={styles.addressContent}>
