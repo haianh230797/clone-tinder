@@ -94,7 +94,7 @@ export default function Home() {
 
     const insertFav = (data) => {
         const newFavitem = {
-            id: Math.floor(Math.random() * 100000),
+            id: Math.floor(Math.random() * 1000000),
             firstName: data.name.first,
             lastName: data.name.first,
             location: data.location.street,
